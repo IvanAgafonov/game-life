@@ -26,7 +26,7 @@ public class PlayingPanel extends JScrollPane {
 
         @Override
         public void paintComponent(Graphics g) {
-            super.paint(g);
+            super.paintComponent(g);
         }
     }
 
