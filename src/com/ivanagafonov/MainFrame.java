@@ -30,9 +30,25 @@ public class MainFrame extends JFrame {
 
 
     public static void main(String[] args) {
+        final int M, N, T;
+
+        if (args.length != 3) {
+            System.err.println("There should be 3 parameters M, N, T (width, height, duration)");
+            System.exit(-1);
+        }
+        try {
+            M = Integer.parseUnsignedInt(args[0]);
+            N = Integer.parseUnsignedInt(args[1]);
+            T = Integer.parseUnsignedInt(args[2]);
+            if (M == 0 || N == 0 || T == 0)
+                throw new NumberFormatException("Zero parameter");
             EventQueue.invokeLater( () -> {
                 MainFrame mainFrame = new MainFrame();
-                mainFrame.getContentPane().add(new PlayingPanel(1, 1), 0);
+                mainFrame.getContentPane().add(new PlayingPanel(M, N), 0);
             });
+        } catch (NumberFormatException e) {  // FIXME too wide try catch
+            System.err.println("The parameters should be positive integer");
+            System.exit(-2);
+        }
     }
 }
