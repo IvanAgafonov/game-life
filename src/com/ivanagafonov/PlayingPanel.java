@@ -33,7 +33,6 @@ public class PlayingPanel extends JScrollPane {
             Graphics2D g2 = (Graphics2D) g;
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++) {
-                    Cell cell = new Cell(x, x+sideSize, y,y+sideSize,j,i);
                     Rectangle2D rect = new Rectangle2D.Float(x, y, sideSize, sideSize);
                     g2.draw(rect);
                     x += sideSize;
@@ -43,23 +42,4 @@ public class PlayingPanel extends JScrollPane {
             }
         }
     }
-
-    class Cell {
-        private int column, row;
-        private float x1, x2, y1, y2;
-        private boolean isCaptured;
-
-        Cell(float x1, float x2, float y1, float y2, int column, int row) {
-            this.column = column;
-            this.row = row;
-            this.x1 = x1;
-            this.x2 = x2;
-            this.y1 = y1;
-            this.y2 = y2;
-        }
-
-        public void capture(){}
-        public void release(){}
-    }
-
 }
