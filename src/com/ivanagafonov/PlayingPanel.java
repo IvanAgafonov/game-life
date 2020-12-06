@@ -3,10 +3,12 @@ package com.ivanagafonov;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayingPanel extends JScrollPane {
     private PlayingField field;
     private final int rows, columns;
+    private ConcurrentHashMap<Cell, Square> cellSquareConcurrentHashMap;
     private static final int MARGIN_WIDTH = 3;  // Magic number to not appear slider
 
     PlayingPanel(int rows, int columns) {
@@ -42,6 +44,17 @@ public class PlayingPanel extends JScrollPane {
                 x = 0;
                 y += sideSize;
             }
+        }
+    }
+
+    class Square {
+        private float x1, x2, y1, y2;
+
+        Square (float x1, float x2, float y1, float y2) {
+            this.x1 = x1;
+            this.x2 = x2;
+            this.y1 = y1;
+            this.y2 = y2;
         }
     }
 }
