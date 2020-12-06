@@ -7,12 +7,14 @@ import java.awt.geom.Rectangle2D;
 public class PlayingPanel extends JScrollPane {
     private PlayingField field;
     private final int rows, columns;
+    private static final int MARGIN_WIDTH = 3;  // Magic number to not appear slider
 
     PlayingPanel(int rows, int columns) {
         this.rows = rows;
         this.columns = columns;
 
-        setMaximumSize(new Dimension(columns * PlayingField.sideSize + 5, rows * PlayingField.sideSize));
+        setMaximumSize(new Dimension(columns * PlayingField.sideSize + MARGIN_WIDTH
+                , rows * PlayingField.sideSize));
 
         field = new PlayingField();
         field.setPreferredSize(new Dimension(columns * PlayingField.sideSize, rows * PlayingField.sideSize));
@@ -22,7 +24,7 @@ public class PlayingPanel extends JScrollPane {
     }
 
     class PlayingField extends JPanel {
-        public static final int sideSize = 5;
+        public static final int sideSize = 10;
 
         @Override
         public void paintComponent(Graphics g) {

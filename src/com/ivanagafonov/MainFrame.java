@@ -24,10 +24,19 @@ public class MainFrame extends JFrame {
         buttons.add(startButton);
         buttons.add(stopButton);
         buttons.add(clearButton);
-        this.getContentPane().add(BorderLayout.SOUTH, buttons);
+        buttons.setMaximumSize(buttons.getPreferredSize());
+
+        this.getContentPane().add(buttons);
     }
 
-
+    public void addPlayingPanel(PlayingPanel panel) {
+        Box box = new Box(BoxLayout.Y_AXIS);
+        box.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+        box.add(Box.createVerticalGlue());
+        box.add(panel);
+        box.add(Box.createVerticalGlue());
+        add(box, 0);
+    }
 
     public static void main(String[] args) {
         final int M, N, T;
@@ -44,7 +53,7 @@ public class MainFrame extends JFrame {
                 throw new NumberFormatException("Zero parameter");
             EventQueue.invokeLater( () -> {
                 MainFrame mainFrame = new MainFrame();
-                mainFrame.getContentPane().add(new PlayingPanel(M, N), 0);
+                mainFrame.addPlayingPanel(new PlayingPanel(M, N));
             });
         } catch (NumberFormatException e) {  // FIXME too wide try catch
             System.err.println("The parameters should be positive integer");
