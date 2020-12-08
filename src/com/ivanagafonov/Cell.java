@@ -1,12 +1,12 @@
 package com.ivanagafonov;
 
-public class Cell {
-    private int column, row;
-    private boolean isCaptured;
+public class Cell implements Cloneable {
+    private boolean isCaptured = false;
 
-    Cell(int row, int column) {
-        this.column = column;
-        this.row = row;
+    Cell() {}
+
+    Cell(boolean isCaptured) {
+        this.isCaptured = isCaptured;
     }
 
     public void capture(){
@@ -14,6 +14,17 @@ public class Cell {
     }
     public void release(){
         isCaptured = false;
+    }
+
+    public boolean isCaptured() {
+        return isCaptured;
+    }
+
+    @Override
+    public Cell clone() {
+        Cell cell = new Cell();
+        cell.isCaptured = this.isCaptured;
+        return cell;
     }
 }
 
