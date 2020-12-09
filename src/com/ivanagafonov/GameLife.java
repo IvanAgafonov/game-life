@@ -4,18 +4,40 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class GameLife {
+
     private List<List<Cell>> cells;
     private List<List<Cell>> last_cells;
+    private PlayingPanel.PlayingField playingField;
+
+    public int getCountColumns() {
+        return countColumns;
+    }
+
+    public List<List<Cell>> getCells() {
+        return cells;
+    }
+
+    public int getCountRows() {
+        return countRows;
+    }
+
     private int countColumns;
     private int countRows;
     private int duration;
 
-    <T extends List<? extends List<? extends Cell>> & Cloneable> GameLife(T initState, int duration) {
-        cells = new ArrayList<>((ArrayList<ArrayList<Cell>>) initState);
-        last_cells = new ArrayList<>((ArrayList<ArrayList<Cell>>) initState);
-        countColumns = cells.get(0).size();
-        countRows = cells.size();
+    <T extends List<? extends List<? extends Cell>> & Cloneable> GameLife(int countRows, int countColumns, int duration) {
+        this.countRows = countRows;
+        this.countColumns = countColumns;
+        cells = new ArrayList<>(countRows);
 
+        for (int i = 0; i < countRows; i++) {
+            cells.add(i, Collections.synchronizedList(new ArrayList<Cell>(countColumns)));
+            for (int j = 0; j < countColumns; j++) {
+                cells.get(i).add(j, new Cell());
+            }
+        }
+
+        last_cells = new ArrayList<>(cells);
         this.duration = duration;
     }
 
@@ -29,18 +51,18 @@ public class GameLife {
         row2.add(new Cell());
         field.add(row1);
         field.add(row2);
-        GameLife gameLife = new GameLife(field, 5);
-        gameLife.play();
+//        GameLife gameLife = new GameLife(field, 5);
+//        gameLife.play();
     }
 
     public void play () {
 
         boolean isEmpty = true;
-        for (int i = 0; i < cells.size(); i++) {
-            cells.set(i, Collections.synchronizedList(cells.get(i)));
-            for (int j = 0; j < cells.get(i).size(); j++) {
-                if (cells.get(i).get(j).isCaptured()) {
+        for (List<Cell> row : cells) {
+            for (Cell cell : row) {
+                if (cell.isCaptured()) {
                     isEmpty = false;
+                    break;
                 }
             }
         }
@@ -80,11 +102,16 @@ public class GameLife {
                 e.printStackTrace();
             }
         }
+        playingField.repaint();
 
         last_cells = new ArrayList<>(cells);
     }
 
     private void randomFill() {}
+
+    public void setPlayingField(PlayingPanel.PlayingField playingField) {
+        this.playingField = playingField;
+    }
 
     abstract class ChangeCell implements Callable<CellInfo> {
         private int row;

@@ -3,18 +3,20 @@ package com.ivanagafonov;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayingPanel extends JScrollPane {
     private PlayingField field;
+    private GameLife game;
     private final int rows, columns;
-    private ConcurrentHashMap<Cell, Square> cellSquareConcurrentHashMap;
     private static final int MARGIN_WIDTH = 3;  // Magic number to not appear slider
 
-    PlayingPanel(int rows, int columns) {
-        this.rows = rows;
-        this.columns = columns;
+    PlayingPanel(GameLife game) {
+        this.rows = game.getCountRows();
+        this.columns = game.getCountColumns();
+        this.game = game;
 
         setMaximumSize(new Dimension(columns * PlayingField.sideSize + MARGIN_WIDTH
                 , rows * PlayingField.sideSize));
@@ -23,11 +25,17 @@ public class PlayingPanel extends JScrollPane {
         field.setPreferredSize(new Dimension(columns * PlayingField.sideSize, rows * PlayingField.sideSize));
         field.setBorder(BorderFactory.createLineBorder(Color.black));
 
+        game.setPlayingField(field);
+
         setViewportView(field);
     }
 
     class PlayingField extends JPanel {
         public static final int sideSize = 10;
+
+        PlayingField() {
+            addMouseListener(new MouseHandler());
+        }
 
         @Override
         public void paintComponent(Graphics g) {
@@ -39,6 +47,13 @@ public class PlayingPanel extends JScrollPane {
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++) {
                     Rectangle2D rect = new Rectangle2D.Float(x, y, sideSize, sideSize);
+                    if (game.getCells().get(i).get(j).isCaptured())
+                    {
+                        g2.setPaint(Color.GREEN);
+                        g2.fill(rect);
+                        g2.setPaint(Color.black);
+                    }
+
                     g2.draw(rect);
                     x += sideSize;
                 }
@@ -48,18 +63,26 @@ public class PlayingPanel extends JScrollPane {
         }
     }
 
-    class Square {
-        private float x1, x2, y1, y2;
-
-        Square (float x1, float x2, float y1, float y2) {
-            this.x1 = x1;
-            this.x2 = x2;
-            this.y1 = y1;
-            this.y2 = y2;
-        }
+    public GameLife getGame() {
+        return game;
     }
 
     class MouseHandler extends MouseAdapter {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            super.mouseClicked(e);
+            int x = e.getX();
+            int y = e.getY();
+            int row = y/PlayingField.sideSize;
+            if (row > rows-1)
+                row = rows-1;
+            int column = x/PlayingField.sideSize;
+            if (column > columns-1)
+                column = column-1;
 
+            game.getCells().get(row).get(column).changeCaptured();
+            if (e.getSource() instanceof JComponent)
+                ((JComponent) e.getSource()).repaint();
+        }
     }
 }

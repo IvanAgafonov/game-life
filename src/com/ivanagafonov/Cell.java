@@ -9,6 +9,10 @@ public class Cell implements Cloneable {
         this.isCaptured = isCaptured;
     }
 
+    public void changeCaptured() {
+        isCaptured = !isCaptured;
+    }
+
     public void capture(){
         isCaptured = true;
     }

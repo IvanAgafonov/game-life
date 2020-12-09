@@ -9,7 +9,7 @@ public class MainFrame extends JFrame {
     private JButton stopButton;
     private JButton clearButton;
     private JPanel buttons;
-    private JComponent playingPanel;
+    private PlayingPanel playingPanel;
 
     MainFrame() {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -21,6 +21,7 @@ public class MainFrame extends JFrame {
 
         buttons = new JPanel();
         startButton = new JButton("Start");
+        startButton.addActionListener(new StartHandler(this));
         stopButton = new JButton("Stop");
         clearButton = new JButton("Clear");
         buttons.add(startButton);
@@ -58,7 +59,8 @@ public class MainFrame extends JFrame {
                 throw new NumberFormatException("Zero parameter");
             EventQueue.invokeLater( () -> {
                 MainFrame mainFrame = new MainFrame();
-                mainFrame.addPlayingPanel(new PlayingPanel(M, N));
+                GameLife game = new GameLife(M, N, T);
+                mainFrame.addPlayingPanel(new PlayingPanel(game));
             });
         } catch (NumberFormatException e) {  // FIXME too wide try catch
             System.err.println("The parameters should be positive integer");
@@ -66,7 +68,7 @@ public class MainFrame extends JFrame {
         }
     }
 
-    public JComponent getPlayingPanel() {
+    public PlayingPanel getPlayingPanel() {
         return playingPanel;
     }
 
@@ -75,10 +77,14 @@ public class MainFrame extends JFrame {
     }
 
     class StartHandler implements ActionListener {
+        MainFrame outer;
+        public StartHandler (MainFrame outer) {
+            this.outer = outer;
+        }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-
+            new Thread(() -> {outer.getPlayingPanel().getGame().play(); }).start();
         }
     }
 
