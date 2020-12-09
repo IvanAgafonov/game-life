@@ -12,7 +12,7 @@ public class MainFrame extends JFrame {
     private PlayingPanel playingPanel;
     private Thread controlThread;
 
-
+    // TODO: Autodocs
     MainFrame() {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setTitle("Game life");
