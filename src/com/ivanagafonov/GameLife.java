@@ -110,6 +110,13 @@ public class GameLife {
                 cell.release();
             }
         }
+
+        for (List<Cell> row : last_cells) {
+            for (Cell cell : row) {
+                cell.release();
+            }
+        }
+
         playingField.repaint();
     }
 
