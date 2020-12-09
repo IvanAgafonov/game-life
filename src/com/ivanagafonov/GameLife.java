@@ -41,20 +41,6 @@ public class GameLife {
         this.duration = duration;
     }
 
-    public static void main(String[] argv) {
-        ArrayList<ArrayList<Cell>> field = new ArrayList<>();
-        ArrayList<Cell> row1 = new ArrayList<Cell>();
-        ArrayList<Cell> row2 = new ArrayList<Cell>();
-        row1.add(new Cell(true));
-        row1.add(new Cell(false));
-        row2.add(new Cell());
-        row2.add(new Cell());
-        field.add(row1);
-        field.add(row2);
-//        GameLife gameLife = new GameLife(field, 5);
-//        gameLife.play();
-    }
-
     public void play () {
         int innerDuration = duration;
         try {
@@ -110,7 +96,13 @@ public class GameLife {
         playingField.repaint();
     }
 
-    private void randomFill() {}
+    private void randomFill() {
+        for (List<Cell> row : last_cells) {
+            for (Cell cell : row) {
+                cell.setCaptured(ThreadLocalRandom.current().nextBoolean());
+            }
+        }
+    }
 
     public void clear () {
         for (List<Cell> row : cells) {
