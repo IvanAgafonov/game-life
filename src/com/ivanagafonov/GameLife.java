@@ -8,9 +8,18 @@ public class GameLife {
     private List<List<Cell>> last_cells;
     private int countColumns;
     private int countRows;
+    private int duration;
+
+    <T extends List<? extends List<? extends Cell>> & Cloneable> GameLife(T initState, int duration) {
+        cells = new ArrayList<>((ArrayList<ArrayList<Cell>>) initState);
+        last_cells = new ArrayList<>((ArrayList<ArrayList<Cell>>) initState);
+        countColumns = cells.get(0).size();
+        countRows = cells.size();
+
+        this.duration = duration;
+    }
 
     public static void main(String[] argv) {
-        GameLife gameLife = new GameLife();
         ArrayList<ArrayList<Cell>> field = new ArrayList<>();
         ArrayList<Cell> row1 = new ArrayList<Cell>();
         ArrayList<Cell> row2 = new ArrayList<Cell>();
@@ -20,17 +29,14 @@ public class GameLife {
         row2.add(new Cell());
         field.add(row1);
         field.add(row2);
-        gameLife.play(field, 5);
+        GameLife gameLife = new GameLife(field, 5);
+        gameLife.play();
     }
 
-    public  <T extends List<? extends List<? extends Cell>> & Cloneable> void play (T initState, int duration) {
-        cells = new ArrayList<>((ArrayList<ArrayList<Cell>>) initState);
-        countColumns = cells.get(0).size();
-        countRows = cells.size();
+    public void play () {
 
         boolean isEmpty = true;
         for (int i = 0; i < cells.size(); i++) {
-            ArrayList<Cell> t =  new ArrayList<>(Collections.synchronizedList(cells.get(i)));
             cells.set(i, Collections.synchronizedList(cells.get(i)));
             for (int j = 0; j < cells.get(i).size(); j++) {
                 if (cells.get(i).get(j).isCaptured()) {
@@ -50,18 +56,37 @@ public class GameLife {
     }
 
     public void iteration () {
-        for (List<Cell> row: cells) {
-            for (Cell cell: row) {
-                if (cell.isCaptured()) {
-                    break;
+        ChangeCell callable;
+        List<Future<CellInfo>> results = new ArrayList<>();
+        for (int i = 0; i < last_cells.size(); i++) {
+            for (int j = 0; j < last_cells.get(i).size(); j++) {
+                if (last_cells.get(i).get(j).isCaptured()) {
+                    callable = new DeathCallable(i, j);
                 }
+                else {
+                    callable = new LifeCallable(i, j);
+                }
+                FutureTask<CellInfo> task = new FutureTask<>(callable);
+                results.add(task);
+                Thread thread = new Thread(task);
+                thread.start();
             }
         }
+
+        for (Future<CellInfo> result: results) {
+            try {
+                CellInfo cellInfo = result.get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        last_cells = new ArrayList<>(cells);
     }
 
     private void randomFill() {}
 
-    abstract class ChangeCell implements Callable<Boolean> {
+    abstract class ChangeCell implements Callable<CellInfo> {
         private int row;
         private int column;
 
@@ -119,10 +144,13 @@ public class GameLife {
         }
 
         @Override
-        public Boolean call() throws Exception {
-            boolean newLife = super.getCountNeighbors() == NEIGHBORS_FOR_NEW_LIFE;
+        public CellInfo call() throws Exception {
+            boolean isLife = super.getCountNeighbors() == NEIGHBORS_FOR_NEW_LIFE;
 
-            return newLife;
+            if (isLife)
+                cells.get(getRow()).get(getColumn()).capture();
+
+            return new CellInfo(getRow(), getColumn(), isLife);
         }
     }
 
@@ -136,17 +164,43 @@ public class GameLife {
         }
 
         @Override
-        public Boolean call() throws Exception {
+        public CellInfo call() throws Exception {
             int countNeighbors = super.getCountNeighbors();
 
             boolean isDeath = countNeighbors < NEIGHBORS_FOR_ALONE_DEATH ||
                     countNeighbors > NEIGHBORS_FOR_FULLNESS_DEATH;
 
-            return isDeath;
+            if (isDeath)
+                cells.get(getRow()).get(getColumn()).release();
+
+            return new CellInfo(getRow(), getColumn(), isDeath);
         }
     }
 }
 
+class CellInfo {
+    private int row;
+    private int column;
+    private boolean isChange;
+
+    CellInfo(int row, int column, boolean isChange) {
+        this.row = row;
+        this.column = column;
+        this.isChange = isChange;
+    }
+
+    public int getRow() {
+        return row;
+    }
+
+    public int getColumn() {
+        return column;
+    }
+
+    public boolean isChange() {
+        return isChange;
+    }
+}
 
 
 
