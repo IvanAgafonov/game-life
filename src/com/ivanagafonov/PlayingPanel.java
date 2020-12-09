@@ -2,6 +2,7 @@ package com.ivanagafonov;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
 import java.awt.geom.Rectangle2D;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -56,5 +57,9 @@ public class PlayingPanel extends JScrollPane {
             this.y1 = y1;
             this.y2 = y2;
         }
+    }
+
+    class MouseHandler extends MouseAdapter {
+
     }
 }

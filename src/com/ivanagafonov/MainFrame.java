@@ -1,6 +1,7 @@
 package com.ivanagafonov;
 
 import java.awt.*;
+import java.awt.event.*;
 import javax.swing.*;
 
 public class MainFrame extends JFrame {
@@ -8,6 +9,7 @@ public class MainFrame extends JFrame {
     private JButton stopButton;
     private JButton clearButton;
     private JPanel buttons;
+    private JComponent playingPanel;
 
     MainFrame() {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -27,9 +29,12 @@ public class MainFrame extends JFrame {
         buttons.setMaximumSize(buttons.getPreferredSize());
 
         this.getContentPane().add(buttons);
+
+        this.addWindowStateListener(new WindowHandler());
     }
 
     public void addPlayingPanel(PlayingPanel panel) {
+        this.playingPanel = panel;
         Box box = new Box(BoxLayout.Y_AXIS);
         box.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         box.add(Box.createVerticalGlue());
@@ -58,6 +63,48 @@ public class MainFrame extends JFrame {
         } catch (NumberFormatException e) {  // FIXME too wide try catch
             System.err.println("The parameters should be positive integer");
             System.exit(-2);
+        }
+    }
+
+    public JComponent getPlayingPanel() {
+        return playingPanel;
+    }
+
+    public JPanel getButtons() {
+        return buttons;
+    }
+
+    class StartHandler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+        }
+    }
+
+    class StopHandler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+        }
+    }
+
+    class ClearHAndler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+        }
+    }
+
+    class WindowHandler implements WindowStateListener {
+
+        public void windowStateChanged(WindowEvent e) {
+            if (e.getSource() instanceof JFrame) {
+                JFrame mainFrame = (JFrame) e.getSource();
+                mainFrame.setMinimumSize(mainFrame.getPreferredSize());
+            }
         }
     }
 }
