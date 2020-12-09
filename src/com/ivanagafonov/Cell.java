@@ -1,6 +1,6 @@
 package com.ivanagafonov;
 
-public class Cell implements Cloneable {
+public class Cell implements Cloneable{
     private boolean isCaptured = false;
 
     Cell() {}
@@ -29,6 +29,24 @@ public class Cell implements Cloneable {
         Cell cell = new Cell();
         cell.isCaptured = this.isCaptured;
         return cell;
+    }
+
+    @Override
+    public int hashCode() {
+        return isCaptured() ? 0 : 1;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || obj.getClass() != this.getClass()) {
+            return false;
+        }
+
+        Cell cell = (Cell) obj;
+        return this.isCaptured() == cell.isCaptured();
     }
 }
 

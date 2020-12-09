@@ -37,7 +37,7 @@ public class GameLife {
             }
         }
 
-        last_cells = new ArrayList<>(cells);
+        last_cells = ListHelper.deepCopy2D(cells);
         this.duration = duration;
     }
 
@@ -56,32 +56,41 @@ public class GameLife {
     }
 
     public void play () {
-
-        boolean isEmpty = true;
-        for (List<Cell> row : cells) {
-            for (Cell cell : row) {
-                if (cell.isCaptured()) {
-                    isEmpty = false;
-                    break;
+        int innerDuration = duration;
+        try {
+            boolean isEmpty = true;
+            for (List<Cell> row : cells) {
+                for (Cell cell : row) {
+                    if (cell.isCaptured()) {
+                        isEmpty = false;
+                        break;
+                    }
                 }
             }
-        }
 
-        if (isEmpty)
-            randomFill();
+            if (isEmpty)
+                randomFill();
 
-        while (duration > 0) {
-            iteration();
-            duration--;
+            while (innerDuration > 0) {
+                iteration();
+                if (ListHelper.deepEquals2D(cells, last_cells))
+                    break;
+                last_cells = ListHelper.deepCopy2D(cells);
+                innerDuration--;
+                Thread.sleep(1);
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            //e.printStackTrace();
+            //TODO Handle
         }
 
     }
 
-    public void iteration () {
+    public void iteration () throws InterruptedException, ExecutionException {
         ChangeCell callable;
         List<Future<CellInfo>> results = new ArrayList<>();
-        for (int i = 0; i < last_cells.size(); i++) {
-            for (int j = 0; j < last_cells.get(i).size(); j++) {
+        for (int i = 0; i < countRows; i++) {
+            for (int j = 0; j < countColumns; j++) {
                 if (last_cells.get(i).get(j).isCaptured()) {
                     callable = new DeathCallable(i, j);
                 }
@@ -96,18 +105,21 @@ public class GameLife {
         }
 
         for (Future<CellInfo> result: results) {
-            try {
                 CellInfo cellInfo = result.get();
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
         }
         playingField.repaint();
-
-        last_cells = new ArrayList<>(cells);
     }
 
     private void randomFill() {}
+
+    public void clear () {
+        for (List<Cell> row : cells) {
+            for (Cell cell : row) {
+                cell.release();
+            }
+        }
+        playingField.repaint();
+    }
 
     public void setPlayingField(PlayingPanel.PlayingField playingField) {
         this.playingField = playingField;

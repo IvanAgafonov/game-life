@@ -10,6 +10,8 @@ public class MainFrame extends JFrame {
     private JButton clearButton;
     private JPanel buttons;
     private PlayingPanel playingPanel;
+    private Thread controlThread;
+
 
     MainFrame() {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -23,7 +25,9 @@ public class MainFrame extends JFrame {
         startButton = new JButton("Start");
         startButton.addActionListener(new StartHandler(this));
         stopButton = new JButton("Stop");
+        stopButton.addActionListener(new StopHandler(this));
         clearButton = new JButton("Clear");
+        clearButton.addActionListener(new ClearHandler(this));
         buttons.add(startButton);
         buttons.add(stopButton);
         buttons.add(clearButton);
@@ -76,6 +80,26 @@ public class MainFrame extends JFrame {
         return buttons;
     }
 
+    public Thread getControlThread() {
+        return controlThread;
+    }
+
+    public void setControlThread(Thread controlThread) {
+        this.controlThread = controlThread;
+    }
+
+    public JButton getStartButton() {
+        return startButton;
+    }
+
+    public JButton getStopButton() {
+        return stopButton;
+    }
+
+    public JButton getClearButton() {
+        return clearButton;
+    }
+
     class StartHandler implements ActionListener {
         MainFrame outer;
         public StartHandler (MainFrame outer) {
@@ -84,23 +108,50 @@ public class MainFrame extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            new Thread(() -> {outer.getPlayingPanel().getGame().play(); }).start();
+            outer.getStartButton().setText("Running");
+            outer.getStartButton().setEnabled(false);
+            outer.getClearButton().setEnabled(false);
+            outer.getButtons().setMaximumSize(buttons.getPreferredSize());
+
+            outer.setControlThread(new Thread(() -> {outer.getPlayingPanel().getGame().play(); }));
+            outer.getControlThread().start();
+            new Thread(() -> {
+                try {
+                    outer.getControlThread().join();
+                    outer.getStartButton().setText("Start");
+                    outer.getStartButton().setEnabled(true);
+                    outer.getClearButton().setEnabled(true);
+                    outer.getButtons().setMaximumSize(buttons.getPreferredSize());
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
+            }).start();
         }
     }
 
     class StopHandler implements ActionListener {
+        MainFrame outer;
+        public StopHandler (MainFrame outer) {
+            this.outer = outer;
+        }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-
+            if (outer.getControlThread() != null) {
+                outer.getControlThread().interrupt();
+            }
         }
     }
 
-    class ClearHAndler implements ActionListener {
+    class ClearHandler implements ActionListener {
+        MainFrame outer;
+        public ClearHandler (MainFrame outer) {
+            this.outer = outer;
+        }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-
+            outer.getPlayingPanel().getGame().clear();
         }
     }
 
