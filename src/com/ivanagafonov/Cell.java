@@ -24,6 +24,10 @@ public class Cell implements Cloneable{
         return isCaptured;
     }
 
+    public void setCaptured(boolean captured) {
+        isCaptured = captured;
+    }
+
     @Override
     public Cell clone() {
         Cell cell = new Cell();
