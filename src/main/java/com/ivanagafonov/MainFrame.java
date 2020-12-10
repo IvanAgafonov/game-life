@@ -56,7 +56,7 @@ public class MainFrame extends JFrame {
             System.exit(-1);
         }
         try {
-            M = Integer.parse   UnsignedInt(args[0]);
+            M = Integer.parseUnsignedInt(args[0]);
             N = Integer.parseUnsignedInt(args[1]);
             T = Integer.parseUnsignedInt(args[2]);
             if (M == 0 || N == 0 || T == 0)
@@ -66,7 +66,7 @@ public class MainFrame extends JFrame {
                 GameLife game = new GameLife(M, N, T);
                 mainFrame.addPlayingPanel(new PlayingPanel(game));
             });
-        } catch (NumberFormatException e) {  // FIXME too wide try catch
+        } catch (NumberFormatException e) {  // FIXME Оставить просто выброс исключения без try catch
             System.err.println("The parameters should be positive integer");
             System.exit(-2);
         }
@@ -129,7 +129,7 @@ public class MainFrame extends JFrame {
         }
     }
 
-    class StopHandler implements ActionListener {
+    class StopHandler implements ActionListener {  // FIXME Зачем тут outer?
         MainFrame outer;
         public StopHandler (MainFrame outer) {
             this.outer = outer;

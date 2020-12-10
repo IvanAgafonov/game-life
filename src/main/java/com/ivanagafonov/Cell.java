@@ -1,6 +1,6 @@
 package com.ivanagafonov;
 
-public class Cell implements Cloneable{
+public class Cell implements Cloneable{  // FIXME Убрать обертку
     private boolean isCaptured = false;
 
     Cell() {}

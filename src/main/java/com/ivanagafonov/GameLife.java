@@ -85,7 +85,7 @@ public class GameLife {
                 }
                 FutureTask<CellInfo> task = new FutureTask<>(callable);
                 results.add(task);
-                Thread thread = new Thread(task);
+                Thread thread = new Thread(task);  // FIXME Сделать пул потоков
                 thread.start();
             }
         }
@@ -93,7 +93,7 @@ public class GameLife {
         for (Future<CellInfo> result: results) {
                 CellInfo cellInfo = result.get();
         }
-        playingField.repaint();
+        playingField.repaint();  // FIXME применить паттерн Observer
     }
 
     private void randomFill() {
@@ -216,7 +216,7 @@ public class GameLife {
     }
 }
 
-class CellInfo {
+class CellInfo {  // FIXME Зачем?
     private int row;
     private int column;
     private boolean isChange;
