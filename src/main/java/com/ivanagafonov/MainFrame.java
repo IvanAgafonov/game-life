@@ -56,7 +56,7 @@ public class MainFrame extends JFrame {
             System.exit(-1);
         }
         try {
-            M = Integer.parseUnsignedInt(args[0]);
+            M = Integer.parse   UnsignedInt(args[0]);
             N = Integer.parseUnsignedInt(args[1]);
             T = Integer.parseUnsignedInt(args[2]);
             if (M == 0 || N == 0 || T == 0)
