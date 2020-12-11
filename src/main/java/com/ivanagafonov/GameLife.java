@@ -5,6 +5,7 @@ import java.util.concurrent.*;
 
 public class GameLife {
 
+    private ExecutorService threadPool;
     private List<List<Boolean>> cells;
     private List<List<Boolean>> last_cells;
     private PlayingPanel.PlayingField playingField;
@@ -30,12 +31,14 @@ public class GameLife {
         this.countColumns = countColumns;
         cells = new ArrayList<>(countRows);
 
-        for (int i = 0; i < countRows; i++) {
-            cells.add(i, Collections.synchronizedList(new ArrayList<>(countColumns)));
+        for (int i = 0; i < countRows; i++) {  // FIXME detach to new method for init
+            cells.add(i, Collections.synchronizedList(new ArrayList<>(countColumns))); // FIXME synchro not need
             for (int j = 0; j < countColumns; j++) {
                 cells.get(i).add(j, false);
             }
         }
+
+        threadPool = Executors.newFixedThreadPool(2);
 
         last_cells = ListHelper.deepCopy2D(cells);
         this.duration = duration;
@@ -89,8 +92,7 @@ public class GameLife {
                 }
                 FutureTask<CellInfo> task = new FutureTask<>(callable);
                 results.add(task);
-                Thread thread = new Thread(task);  // FIXME Сделать пул потоков
-                thread.start();
+                threadPool.submit(task);  // FIXME Pool.shutdown()?
             }
         }
 
