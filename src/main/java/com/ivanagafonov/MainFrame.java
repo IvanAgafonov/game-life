@@ -23,11 +23,11 @@ public class MainFrame extends JFrame {
 
         buttons = new JPanel();
         startButton = new JButton("Start");
-        startButton.addActionListener(new StartHandler(this));
+        startButton.addActionListener(new StartHandler());
         stopButton = new JButton("Stop");
-        stopButton.addActionListener(new StopHandler(this));
+        stopButton.addActionListener(new StopHandler());
         clearButton = new JButton("Clear");
-        clearButton.addActionListener(new ClearHandler(this));
+        clearButton.addActionListener(new ClearHandler());
         buttons.add(startButton);
         buttons.add(stopButton);
         buttons.add(clearButton);
@@ -35,7 +35,7 @@ public class MainFrame extends JFrame {
 
         this.getContentPane().add(buttons);
 
-        this.addWindowStateListener(new WindowHandler());
+        this.addWindowStateListener(new WindowMinSizeHandler());
     }
 
     public void addPlayingPanel(PlayingPanel panel) {
@@ -49,27 +49,30 @@ public class MainFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        final int M, N, T;
+        final int countRowsField, countColumnsFiled, countIterationFiled;
 
-        if (args.length != 3) {
-            System.err.println("There should be 3 parameters M, N, T (width, height, duration)");
-            System.exit(-1);
-        }
+        if (args.length != 3)
+            throw new IllegalArgumentException("There should be 3 parameters M, N, T (width, height, duration)");
+
         try {
-            M = Integer.parseUnsignedInt(args[0]);
-            N = Integer.parseUnsignedInt(args[1]);
-            T = Integer.parseUnsignedInt(args[2]);
-            if (M == 0 || N == 0 || T == 0)
-                throw new NumberFormatException("Zero parameter");
-            EventQueue.invokeLater( () -> {
-                MainFrame mainFrame = new MainFrame();
-                GameLife game = new GameLife(M, N, T);
-                mainFrame.addPlayingPanel(new PlayingPanel(game));
-            });
-        } catch (NumberFormatException e) {  // FIXME Оставить просто выброс исключения без try catch
-            System.err.println("The parameters should be positive integer");
-            System.exit(-2);
+            countRowsField = Integer.parseUnsignedInt(args[0]);
+            countColumnsFiled = Integer.parseUnsignedInt(args[1]);
+            countIterationFiled = Integer.parseUnsignedInt(args[2]);
+        } catch (NumberFormatException e) {
+            NumberFormatException e2 = new NumberFormatException("The parameters should be positive integer");
+            e2.initCause(e);
+            throw e2;
         }
+
+        if (countRowsField == 0 || countColumnsFiled == 0 || countIterationFiled == 0)
+            throw new NumberFormatException("Zero parameter");
+
+        EventQueue.invokeLater( () -> {
+            MainFrame mainFrame = new MainFrame();
+            GameLife game = new GameLife(countRowsField, countColumnsFiled, countIterationFiled);
+            mainFrame.addPlayingPanel(new PlayingPanel(game));
+        });
+
     }
 
     public PlayingPanel getPlayingPanel() {
@@ -101,27 +104,23 @@ public class MainFrame extends JFrame {
     }
 
     class StartHandler implements ActionListener {
-        MainFrame outer;
-        public StartHandler (MainFrame outer) {
-            this.outer = outer;
-        }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            outer.getStartButton().setText("Running");
-            outer.getStartButton().setEnabled(false);
-            outer.getClearButton().setEnabled(false);
-            outer.getButtons().setMaximumSize(buttons.getPreferredSize());
+            startButton.setText("Running");
+            startButton.setEnabled(false);
+            clearButton.setEnabled(false);
+            buttons.setMaximumSize(buttons.getPreferredSize());
 
-            outer.setControlThread(new Thread(() -> {outer.getPlayingPanel().getGame().play(); }));
-            outer.getControlThread().start();
+            controlThread = new Thread(() -> {playingPanel.getGame().play(); });
+            controlThread.start();
             new Thread(() -> {
                 try {
-                    outer.getControlThread().join();
-                    outer.getStartButton().setText("Start");
-                    outer.getStartButton().setEnabled(true);
-                    outer.getClearButton().setEnabled(true);
-                    outer.getButtons().setMaximumSize(buttons.getPreferredSize());
+                    controlThread.join();
+                    startButton.setText("Start");
+                    startButton.setEnabled(true);
+                    clearButton.setEnabled(true);
+                    buttons.setMaximumSize(buttons.getPreferredSize());
                 } catch (InterruptedException interruptedException) {
                     interruptedException.printStackTrace();
                 }
@@ -129,39 +128,21 @@ public class MainFrame extends JFrame {
         }
     }
 
-    class StopHandler implements ActionListener {  // FIXME Зачем тут outer?
-        MainFrame outer;
-        public StopHandler (MainFrame outer) {
-            this.outer = outer;
-        }
+    class StopHandler implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (outer.getControlThread() != null) {
-                outer.getControlThread().interrupt();
+            if (controlThread != null) {
+                controlThread.interrupt();
             }
         }
     }
 
     class ClearHandler implements ActionListener {
-        MainFrame outer;
-        public ClearHandler (MainFrame outer) {
-            this.outer = outer;
-        }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            outer.getPlayingPanel().getGame().clear();
-        }
-    }
-
-    class WindowHandler implements WindowStateListener {
-
-        public void windowStateChanged(WindowEvent e) {
-            if (e.getSource() instanceof JFrame) {
-                JFrame mainFrame = (JFrame) e.getSource();
-                mainFrame.setMinimumSize(mainFrame.getPreferredSize());
-            }
+            playingPanel.getGame().clear();
         }
     }
 }

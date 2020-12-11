@@ -47,7 +47,7 @@ public class PlayingPanel extends JScrollPane {
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++) {
                     Rectangle2D rect = new Rectangle2D.Float(x, y, sideSize, sideSize);
-                    if (game.getCells().get(i).get(j).isCaptured())
+                    if (game.getCells().get(i).get(j))
                     {
                         g2.setPaint(Color.GREEN);
                         g2.fill(rect);
@@ -80,7 +80,7 @@ public class PlayingPanel extends JScrollPane {
             if (column > columns-1)
                 column = column-1;
 
-            game.getCells().get(row).get(column).changeCaptured();
+            game.getCells().get(row).set(column, !game.getCells().get(row).get(column)); // FIXME OBSERVER
             if (e.getSource() instanceof JComponent)
                 ((JComponent) e.getSource()).repaint();
         }
