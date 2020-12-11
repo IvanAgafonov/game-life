@@ -5,11 +5,10 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
-import java.util.concurrent.ConcurrentHashMap;
+
 
 public class PlayingPanel extends JScrollPane {
-    private PlayingField field;
-    private GameLife game;
+    private final GameLife game;
     private final int rows, columns;
     private static final int MARGIN_WIDTH = 3;  // Magic number to not appear slider
 
@@ -21,7 +20,7 @@ public class PlayingPanel extends JScrollPane {
         setMaximumSize(new Dimension(columns * PlayingField.sideSize + MARGIN_WIDTH
                 , rows * PlayingField.sideSize));
 
-        field = new PlayingField();
+        PlayingField field = new PlayingField();
         field.setPreferredSize(new Dimension(columns * PlayingField.sideSize, rows * PlayingField.sideSize));
         field.setBorder(BorderFactory.createLineBorder(Color.black));
 

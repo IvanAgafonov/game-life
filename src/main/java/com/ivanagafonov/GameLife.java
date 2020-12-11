@@ -25,13 +25,13 @@ public class GameLife {
     private int countRows;
     private int duration;
 
-    <T extends List<? extends List<? extends Boolean>> & Cloneable> GameLife(int countRows, int countColumns, int duration) {
+    GameLife(int countRows, int countColumns, int duration) {
         this.countRows = countRows;
         this.countColumns = countColumns;
         cells = new ArrayList<>(countRows);
 
         for (int i = 0; i < countRows; i++) {
-            cells.add(i, Collections.synchronizedList(new ArrayList<Boolean>(countColumns)));
+            cells.add(i, Collections.synchronizedList(new ArrayList<>(countColumns)));
             for (int j = 0; j < countColumns; j++) {
                 cells.get(i).add(j, false);
             }
@@ -186,7 +186,7 @@ public class GameLife {
         }
 
         @Override
-        public CellInfo call() throws Exception {
+        public CellInfo call() {
             boolean isLife = super.getCountNeighbors() == NEIGHBORS_FOR_NEW_LIFE;
 
             if (isLife)
@@ -206,7 +206,7 @@ public class GameLife {
         }
 
         @Override
-        public CellInfo call() throws Exception {
+        public CellInfo call() {
             int countNeighbors = super.getCountNeighbors();
 
             boolean isDeath = countNeighbors < NEIGHBORS_FOR_ALONE_DEATH ||

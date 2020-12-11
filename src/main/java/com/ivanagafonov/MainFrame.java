@@ -5,9 +5,9 @@ import java.awt.event.*;
 import javax.swing.*;
 
 public class MainFrame extends JFrame {
-    private JButton startButton;
-    private JButton stopButton;
-    private JButton clearButton;
+    private JButton startButton = new JButton("Start");
+    private JButton stopButton = new JButton("Stop");
+    private JButton clearButton = new JButton("Clear");
     private JPanel buttons;
     private PlayingPanel playingPanel;
     private Thread controlThread;
@@ -22,11 +22,8 @@ public class MainFrame extends JFrame {
         this.setVisible(true);
 
         buttons = new JPanel();
-        startButton = new JButton("Start");
         startButton.addActionListener(new StartHandler());
-        stopButton = new JButton("Stop");
         stopButton.addActionListener(new StopHandler());
-        clearButton = new JButton("Clear");
         clearButton.addActionListener(new ClearHandler());
         buttons.add(startButton);
         buttons.add(stopButton);
@@ -75,33 +72,6 @@ public class MainFrame extends JFrame {
 
     }
 
-    public PlayingPanel getPlayingPanel() {
-        return playingPanel;
-    }
-
-    public JPanel getButtons() {
-        return buttons;
-    }
-
-    public Thread getControlThread() {
-        return controlThread;
-    }
-
-    public void setControlThread(Thread controlThread) {
-        this.controlThread = controlThread;
-    }
-
-    public JButton getStartButton() {
-        return startButton;
-    }
-
-    public JButton getStopButton() {
-        return stopButton;
-    }
-
-    public JButton getClearButton() {
-        return clearButton;
-    }
 
     class StartHandler implements ActionListener {
 
@@ -112,19 +82,21 @@ public class MainFrame extends JFrame {
             clearButton.setEnabled(false);
             buttons.setMaximumSize(buttons.getPreferredSize());
 
-            controlThread = new Thread(() -> {playingPanel.getGame().play(); });
+            controlThread = new Thread(() -> playingPanel.getGame().play());
             controlThread.start();
-            new Thread(() -> {
-                try {
-                    controlThread.join();
-                    startButton.setText("Start");
-                    startButton.setEnabled(true);
-                    clearButton.setEnabled(true);
-                    buttons.setMaximumSize(buttons.getPreferredSize());
-                } catch (InterruptedException interruptedException) {
-                    interruptedException.printStackTrace();
-                }
-            }).start();
+            new Thread(this::run).start();
+        }
+
+        private void run() {
+            try {
+                controlThread.join();
+                startButton.setText("Start");
+                startButton.setEnabled(true);
+                clearButton.setEnabled(true);
+                buttons.setMaximumSize(buttons.getPreferredSize());
+            } catch (InterruptedException interruptedException) {
+                interruptedException.printStackTrace();
+            }
         }
     }
 
