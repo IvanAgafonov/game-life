@@ -7,7 +7,6 @@ public class GameLife {
 
     private ExecutorService threadPool;
     private List<List<Boolean>> cells;
-    private List<List<Boolean>> last_cells;
     private PlayingPanel.PlayingField playingField;
 
     public int getCountColumns() {
@@ -31,16 +30,10 @@ public class GameLife {
         this.countColumns = countColumns;
         cells = new ArrayList<>(countRows);
 
-        for (int i = 0; i < countRows; i++) {  // FIXME detach to new method for init
-            cells.add(i, Collections.synchronizedList(new ArrayList<>(countColumns))); // FIXME synchro not need
-            for (int j = 0; j < countColumns; j++) {
-                cells.get(i).add(j, false);
-            }
-        }
+        initField();
 
         threadPool = Executors.newFixedThreadPool(2);
 
-        last_cells = ListHelper.deepCopy2D(cells);
         this.duration = duration;
     }
 
@@ -58,54 +51,72 @@ public class GameLife {
         return isEmpty;
     }
 
+    private void initField() {
+        for (int i = 0; i < countRows; i++) {
+            cells.add(i, new ArrayList<>(countColumns));
+            for (int j = 0; j < countColumns; j++) {
+                cells.get(i).add(j, false);
+            }
+        }
+    }
+
     public void play () {
         int innerDuration = duration;
+        boolean isFieldChanged;
         try {
             if (isEmptyField())
                 randomFill();
 
             while (innerDuration > 0) {
-                iteration();
-                if (ListHelper.deepEquals2D(cells, last_cells))
+                isFieldChanged = iteration();
+                if (!isFieldChanged)
                     break;
-                last_cells = ListHelper.deepCopy2D(cells);
                 innerDuration--;
                 Thread.sleep(1);
             }
         } catch (InterruptedException | ExecutionException e) {
-            //e.printStackTrace();
-            //TODO Handle
+//            e.printStackTrace();
         }
 
     }
 
-    public void iteration () throws InterruptedException, ExecutionException {
+    public boolean iteration () throws InterruptedException, ExecutionException {
         ChangeCell callable;
-        List<Future<CellInfo>> results = new ArrayList<>();
+        List<CellChangeFutureTask> results = new ArrayList<>();
+        List<Boolean> res = new ArrayList<>();
         for (int i = 0; i < countRows; i++) {
             for (int j = 0; j < countColumns; j++) {
-                if (last_cells.get(i).get(j)) {
+                if (cells.get(i).get(j)) {
                     callable = new DeathCallable(i, j);
                 }
                 else {
                     callable = new LifeCallable(i, j);
                 }
-                FutureTask<CellInfo> task = new FutureTask<>(callable);
+                CellChangeFutureTask task = new CellChangeFutureTask(callable, i, j);
                 results.add(task);
                 threadPool.submit(task);  // FIXME Pool.shutdown()?
             }
         }
 
-        for (Future<CellInfo> result: results) {
-                CellInfo cellInfo = result.get();  // FIXME Принимать результаты и применять к массиву. Убрать 2-ой массив
+        boolean isFieldChanged = false;
+        for (CellChangeFutureTask result: results) {
+            Boolean isCellChange = result.get();  // FIXME Принимать результаты и применять к массиву. Убрать 2-ой массив
+            if (isCellChange) {
+                cells.get(result.getRow()).set(result.getColumn(),
+                        !cells.get(result.getRow()).get(result.getColumn()));
+                isFieldChanged = true;
+            }
         }
+
+
         playingField.repaint();  // FIXME применить паттерн Observer
+        return isFieldChanged;
     }
 
     private void randomFill() {
-        for (List<Boolean> row : last_cells) {
-            for (boolean cell : row) {
-                cell = ThreadLocalRandom.current().nextBoolean();
+        for (int i = 0; i < countRows; i++) {
+            for (int j = 0; j < countColumns; j++) {
+                cells.get(i).set(j, ThreadLocalRandom.current().nextBoolean());
             }
         }
     }
@@ -117,12 +128,6 @@ public class GameLife {
             }
         }
 
-        for (int i = 0; i < countRows; i++) {
-            for (int j = 0; j < countColumns; j++) {
-                last_cells.get(i).set(j, false);
-            }
-        }
-
         playingField.repaint();
     }
 
@@ -130,9 +135,9 @@ public class GameLife {
         this.playingField = playingField;
     }
 
-    abstract class ChangeCell implements Callable<CellInfo> {
-        private int row;
-        private int column;
+    abstract class ChangeCell implements Callable<Boolean> {
+        private final int row;
+        private final int column;
 
         ChangeCell(int row, int column) {
             this.row = row;
@@ -151,28 +156,28 @@ public class GameLife {
             int countNeighbors = 0;
 
             if (getColumn() + 1 < countColumns &&
-                    last_cells.get(getRow()).get(getColumn() + 1))
+                    cells.get(getRow()).get(getColumn() + 1))
                 countNeighbors++;
             if (getRow() + 1 < countRows &&
-                    last_cells.get(getRow() + 1).get(getColumn()))
+                    cells.get(getRow() + 1).get(getColumn()))
                 countNeighbors++;
             if ( getRow() + 1 < countRows && getColumn() + 1 < countColumns &&
-                    last_cells.get(getRow() + 1).get(getColumn() + 1))
+                    cells.get(getRow() + 1).get(getColumn() + 1))
                 countNeighbors++;
             if (getRow() > 0 &&
-                    last_cells.get(getRow() - 1).get(getColumn()))
+                    cells.get(getRow() - 1).get(getColumn()))
                 countNeighbors++;
             if (getColumn() > 0 &&
-                    last_cells.get(getRow()).get(getColumn() - 1))
+                    cells.get(getRow()).get(getColumn() - 1))
                 countNeighbors++;
             if (getRow() > 0 && getColumn() > 0 &&
-                    last_cells.get(getRow() - 1).get(getColumn() - 1))
+                    cells.get(getRow() - 1).get(getColumn() - 1))
                 countNeighbors++;
             if (getRow() + 1 < countRows  && getColumn() > 0 &&
-                    last_cells.get(getRow() + 1).get(getColumn() - 1))
+                    cells.get(getRow() + 1).get(getColumn() - 1))
                 countNeighbors++;
             if (getRow() > 0  && getColumn() + 1 < countColumns &&
-                    last_cells.get(getRow() - 1).get(getColumn() + 1))
+                    cells.get(getRow() - 1).get(getColumn() + 1))
                 countNeighbors++;
 
             return countNeighbors;
@@ -188,13 +193,8 @@ public class GameLife {
         }
 
         @Override
-        public CellInfo call() {
-            boolean isLife = super.getCountNeighbors() == NEIGHBORS_FOR_NEW_LIFE;
-
-            if (isLife)
-                cells.get(getRow()).set(getColumn(), true);
-
-            return new CellInfo(getRow(), getColumn(), isLife);
+        public Boolean call() {
+            return super.getCountNeighbors() == NEIGHBORS_FOR_NEW_LIFE;
         }
     }
 
@@ -208,29 +208,23 @@ public class GameLife {
         }
 
         @Override
-        public CellInfo call() {
+        public Boolean call() {
             int countNeighbors = super.getCountNeighbors();
 
-            boolean isDeath = countNeighbors < NEIGHBORS_FOR_ALONE_DEATH ||
+            return countNeighbors < NEIGHBORS_FOR_ALONE_DEATH ||
                     countNeighbors > NEIGHBORS_FOR_FULLNESS_DEATH;
-
-            if (isDeath)
-                cells.get(getRow()).set(getColumn(), false);
-
-            return new CellInfo(getRow(), getColumn(), isDeath);
         }
     }
 }
 
-class CellInfo {  // FIXME Зачем?
-    private int row;
-    private int column;
-    private boolean isChange;
+class CellChangeFutureTask extends FutureTask<Boolean> {
+    private final int row;
+    private final int column;
 
-    CellInfo(int row, int column, boolean isChange) {
+    public CellChangeFutureTask(Callable<Boolean> callable, int row, int column) {
+        super(callable);
         this.row = row;
         this.column = column;
-        this.isChange = isChange;
     }
 
     public int getRow() {
@@ -240,11 +234,5 @@ class CellInfo {  // FIXME Зачем?
     public int getColumn() {
         return column;
     }
-
-    public boolean isChange() {
-        return isChange;
-    }
 }
-
-
 

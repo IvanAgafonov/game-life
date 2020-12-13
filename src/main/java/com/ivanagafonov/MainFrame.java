@@ -95,7 +95,7 @@ public class MainFrame extends JFrame {
                 clearButton.setEnabled(true);
                 buttons.setMaximumSize(buttons.getPreferredSize());
             } catch (InterruptedException interruptedException) {
-                interruptedException.printStackTrace();
+//                interruptedException.printStackTrace();
             }
         }
     }

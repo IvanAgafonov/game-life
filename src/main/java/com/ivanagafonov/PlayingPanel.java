@@ -7,10 +7,10 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 
 
-public class PlayingPanel extends JScrollPane {
+public class PlayingPanel extends JScrollPane {  // FIXME Not need to be specific class
     private final GameLife game;
     private final int rows, columns;
-    private static final int MARGIN_WIDTH = 3;  // Magic number to not appear slider
+    private static final int MARGIN_WIDTH = 3;  // FIXME Get rid of Magic number to not appear slider
 
     PlayingPanel(GameLife game) {
         this.rows = game.getCountRows();
