@@ -5,8 +5,8 @@ import java.util.concurrent.*;
 
 public class GameLife {
 
-    private ExecutorService threadPool;
-    private List<List<Boolean>> cells;
+    private final ExecutorService threadPool;
+    private final List<List<Boolean>> cells;
     private PlayingPanel.PlayingField playingField;
 
     public int getCountColumns() {
@@ -21,9 +21,9 @@ public class GameLife {
         return countRows;
     }
 
-    private int countColumns;
-    private int countRows;
-    private int duration;
+    private final int countColumns;
+    private final int countRows;
+    private final int duration;
 
     GameLife(int countRows, int countColumns, int duration) {
         this.countRows = countRows;
@@ -63,27 +63,24 @@ public class GameLife {
     public void play () {
         int innerDuration = duration;
         boolean isFieldChanged;
+        if (isEmptyField())
+            randomFill();
         try {
-            if (isEmptyField())
-                randomFill();
-
             while (innerDuration > 0) {
                 isFieldChanged = iteration();
                 if (!isFieldChanged)
                     break;
                 innerDuration--;
-                Thread.sleep(1);
             }
         } catch (InterruptedException | ExecutionException e) {
-//            e.printStackTrace();
+            e.printStackTrace();
         }
-
     }
 
-    public boolean iteration () throws InterruptedException, ExecutionException {
+    public boolean iteration () throws ExecutionException, InterruptedException {
         ChangeCell callable;
         List<CellChangeFutureTask> results = new ArrayList<>();
-        List<Boolean> res = new ArrayList<>();
+
         for (int i = 0; i < countRows; i++) {
             for (int j = 0; j < countColumns; j++) {
                 if (cells.get(i).get(j)) {
@@ -94,13 +91,17 @@ public class GameLife {
                 }
                 CellChangeFutureTask task = new CellChangeFutureTask(callable, i, j);
                 results.add(task);
-                threadPool.submit(task);  // FIXME Pool.shutdown()?
+                threadPool.submit(task);
             }
         }
 
         boolean isFieldChanged = false;
+
         for (CellChangeFutureTask result: results) {
-            Boolean isCellChange = result.get();  // FIXME Принимать результаты и применять к массиву. Убрать 2-ой массив
+            Boolean isCellChange = null;
+
+                isCellChange = result.get();
+
             if (isCellChange) {
                 cells.get(result.getRow()).set(result.getColumn(),
                         !cells.get(result.getRow()).get(result.getColumn()));
@@ -109,7 +110,8 @@ public class GameLife {
         }
 
 
-        playingField.repaint();  // FIXME применить паттерн Observer
+        playingField.repaint();  // FIXME pattern Observer
+
         return isFieldChanged;
     }
 

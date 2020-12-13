@@ -2,15 +2,18 @@ package com.ivanagafonov;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import javax.swing.*;
 
 public class MainFrame extends JFrame {
     private JButton startButton = new JButton("Start");
     private JButton stopButton = new JButton("Stop");
     private JButton clearButton = new JButton("Clear");
-    private JPanel buttons;
+    private JPanel buttons = new JPanel();
     private PlayingPanel playingPanel;
-    private Thread controlThread;
+    private ExecutorService controlThread;
 
 
     MainFrame() {
@@ -21,7 +24,6 @@ public class MainFrame extends JFrame {
         this.setLayout(new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS));
         this.setVisible(true);
 
-        buttons = new JPanel();
         startButton.addActionListener(new StartHandler());
         stopButton.addActionListener(new StopHandler());
         clearButton.addActionListener(new ClearHandler());
@@ -31,7 +33,6 @@ public class MainFrame extends JFrame {
         buttons.setMaximumSize(buttons.getPreferredSize());
 
         this.getContentPane().add(buttons);
-
         this.addWindowStateListener(new WindowMinSizeHandler());
     }
 
@@ -82,20 +83,21 @@ public class MainFrame extends JFrame {
             clearButton.setEnabled(false);
             buttons.setMaximumSize(buttons.getPreferredSize());
 
-            controlThread = new Thread(() -> playingPanel.getGame().play());
-            controlThread.start();
-            new Thread(this::run).start();
+            controlThread = Executors.newSingleThreadExecutor();
+            controlThread.submit(() -> playingPanel.getGame().play());
+            controlThread.shutdown();
+            Executors.newSingleThreadExecutor().submit(this::waitEnd); // FIXME Thread Pool | pattern Observer
         }
 
-        private void run() {
+        private void waitEnd() {
             try {
-                controlThread.join();
+                controlThread.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
                 startButton.setText("Start");
                 startButton.setEnabled(true);
                 clearButton.setEnabled(true);
                 buttons.setMaximumSize(buttons.getPreferredSize());
             } catch (InterruptedException interruptedException) {
-//                interruptedException.printStackTrace();
+                interruptedException.printStackTrace();
             }
         }
     }
@@ -105,7 +107,7 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (controlThread != null) {
-                controlThread.interrupt();
+                controlThread.shutdownNow();
             }
         }
     }

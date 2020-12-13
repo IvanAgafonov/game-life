@@ -7,18 +7,14 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 
 
-public class PlayingPanel extends JScrollPane {  // FIXME Not need to be specific class
+public class PlayingPanel extends JScrollPane {
     private final GameLife game;
     private final int rows, columns;
-    private static final int MARGIN_WIDTH = 3;  // FIXME Get rid of Magic number to not appear slider
 
     PlayingPanel(GameLife game) {
         this.rows = game.getCountRows();
         this.columns = game.getCountColumns();
         this.game = game;
-
-        setMaximumSize(new Dimension(columns * PlayingField.sideSize + MARGIN_WIDTH
-                , rows * PlayingField.sideSize));
 
         PlayingField field = new PlayingField();
         field.setPreferredSize(new Dimension(columns * PlayingField.sideSize, rows * PlayingField.sideSize));
@@ -27,6 +23,8 @@ public class PlayingPanel extends JScrollPane {  // FIXME Not need to be specifi
         game.setPlayingField(field);
 
         setViewportView(field);
+
+        setMaximumSize(getPreferredSize());
     }
 
     class PlayingField extends JPanel {
