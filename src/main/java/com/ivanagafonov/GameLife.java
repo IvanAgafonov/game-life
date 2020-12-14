@@ -1,13 +1,19 @@
 package com.ivanagafonov;
 
+import com.ivanagafonov.compound.Cell;
+import com.ivanagafonov.compound.CellEvent;
+import com.ivanagafonov.compound.Component;
+import com.ivanagafonov.compound.Mediator;
+
 import java.util.*;
 import java.util.concurrent.*;
 
-public class GameLife {
+public class GameLife implements Component {
 
     private final ExecutorService threadPool;
     private final List<List<Boolean>> cells;
     private PlayingPanel.PlayingField playingField;
+    private Mediator mediator;
 
     public int getCountColumns() {
         return countColumns;
@@ -115,6 +121,13 @@ public class GameLife {
         return isFieldChanged;
     }
 
+    public void changeCell(Cell cell) {
+        boolean isFilled = !cells.get(cell.getRow()).get(cell.getColumn());
+        cell.setFilled(isFilled);
+        cells.get(cell.getRow()).set(cell.getColumn(), isFilled);
+        mediator.notify(new CellEvent(this, cell));
+    }
+
     private void randomFill() {
         for (int i = 0; i < countRows; i++) {
             for (int j = 0; j < countColumns; j++) {
@@ -135,6 +148,11 @@ public class GameLife {
 
     public void setPlayingField(PlayingPanel.PlayingField playingField) {
         this.playingField = playingField;
+    }
+
+    @Override
+    public void setMediator(Mediator mediator) {
+        this.mediator = mediator;
     }
 
     abstract class ChangeCell implements Callable<Boolean> {
@@ -216,25 +234,6 @@ public class GameLife {
             return countNeighbors < NEIGHBORS_FOR_ALONE_DEATH ||
                     countNeighbors > NEIGHBORS_FOR_FULLNESS_DEATH;
         }
-    }
-}
-
-class CellChangeFutureTask extends FutureTask<Boolean> {
-    private final int row;
-    private final int column;
-
-    public CellChangeFutureTask(Callable<Boolean> callable, int row, int column) {
-        super(callable);
-        this.row = row;
-        this.column = column;
-    }
-
-    public int getRow() {
-        return row;
-    }
-
-    public int getColumn() {
-        return column;
     }
 }
 

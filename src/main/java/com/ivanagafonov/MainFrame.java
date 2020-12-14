@@ -1,5 +1,9 @@
 package com.ivanagafonov;
 
+import com.ivanagafonov.compound.Component;
+import com.ivanagafonov.compound.GraphicLogicMediator;
+import com.ivanagafonov.compound.Mediator;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.concurrent.ExecutorService;
@@ -7,13 +11,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.swing.*;
 
-public class MainFrame extends JFrame {
+public class MainFrame extends JFrame implements Component {
     private JButton startButton = new JButton("Start");
     private JButton stopButton = new JButton("Stop");
     private JButton clearButton = new JButton("Clear");
     private JPanel buttons = new JPanel();
     private PlayingPanel playingPanel;
     private ExecutorService controlThread;
+    private Mediator mediator;
 
 
     MainFrame() {
@@ -68,11 +73,31 @@ public class MainFrame extends JFrame {
         EventQueue.invokeLater( () -> {
             MainFrame mainFrame = new MainFrame();
             GameLife game = new GameLife(countRowsField, countColumnsFiled, countIterationFiled);
-            mainFrame.addPlayingPanel(new PlayingPanel(game));
+            PlayingPanel playingPanel = new PlayingPanel(countRowsField, countColumnsFiled);
+            mainFrame.addPlayingPanel(playingPanel);
+            Mediator mediator = new GraphicLogicMediator(mainFrame, game, playingPanel.getField());
+            mainFrame.setMediator(mediator);
+            game.setMediator(mediator);
+            playingPanel.setMediator(mediator);
         });
-
     }
 
+    public JButton getStartButton() {
+        return startButton;
+    }
+
+    public JButton getClearButton() {
+        return startButton;
+    }
+
+    public JPanel getButtons() {
+        return buttons;
+    }
+
+    @Override
+    public void setMediator(Mediator mediator) {
+        this.mediator = mediator;
+    }
 
     class StartHandler implements ActionListener {
 
@@ -84,7 +109,7 @@ public class MainFrame extends JFrame {
             buttons.setMaximumSize(buttons.getPreferredSize());
 
             controlThread = Executors.newSingleThreadExecutor();
-            controlThread.submit(() -> playingPanel.getGame().play());
+//            controlThread.submit(() -> playingPanel.getGame().play());
             controlThread.shutdown();
             Executors.newSingleThreadExecutor().submit(this::waitEnd); // FIXME Thread Pool | pattern Observer
         }
@@ -116,7 +141,7 @@ public class MainFrame extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            playingPanel.getGame().clear();
+//            playingPanel.getGame().clear();
         }
     }
 }
