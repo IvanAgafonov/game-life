@@ -124,7 +124,7 @@ public class GameLife {
             }
         }
 
-        playingField.repaint();
+        playingField.repaint(); // FIXME dependency on graphics
     }
 
     public void setPlayingField(PlayingPanel.PlayingField playingField) {
@@ -164,7 +164,7 @@ public class GameLife {
             return column;
         }
 
-        private int getCountNeighbors() {
+        public int getCountNeighbors() {
             int countNeighbors = 0;
 
             if (getColumn() + 1 < countColumns &&
