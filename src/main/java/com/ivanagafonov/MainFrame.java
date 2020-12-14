@@ -7,7 +7,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.swing.*;
 
-public class MainFrame extends JFrame {
+public class MainFrame extends JFrame implements StatusEventListener {
     private JButton startButton = new JButton("Start");
     private JButton stopButton = new JButton("Stop");
     private JButton clearButton = new JButton("Clear");
@@ -69,8 +69,25 @@ public class MainFrame extends JFrame {
             MainFrame mainFrame = new MainFrame();
             GameLife game = new GameLife(countRowsField, countColumnsFiled, countIterationFiled);
             mainFrame.addPlayingPanel(new PlayingPanel(game));
+            game.getStatusEventManager().subscribe(mainFrame);
         });
 
+    }
+
+    @Override
+    public void update(Status status) {
+        if (status == Status.RUNNING) {
+            startButton.setText("Running");
+            startButton.setEnabled(false);
+            clearButton.setEnabled(false);
+            buttons.setMaximumSize(buttons.getPreferredSize());
+        }
+        else if (status == Status.STOPPED) {
+            startButton.setText("Start");
+            startButton.setEnabled(true);
+            clearButton.setEnabled(true);
+            buttons.setMaximumSize(buttons.getPreferredSize());
+        }
     }
 
 
@@ -78,27 +95,9 @@ public class MainFrame extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            startButton.setText("Running");
-            startButton.setEnabled(false);
-            clearButton.setEnabled(false);
-            buttons.setMaximumSize(buttons.getPreferredSize());
-
             controlThread = Executors.newSingleThreadExecutor();
             controlThread.submit(() -> playingPanel.getGame().play());
             controlThread.shutdown();
-            Executors.newSingleThreadExecutor().submit(this::waitEnd); // FIXME Thread Pool | pattern Observer
-        }
-
-        private void waitEnd() {
-            try {
-                controlThread.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-                startButton.setText("Start");
-                startButton.setEnabled(true);
-                clearButton.setEnabled(true);
-                buttons.setMaximumSize(buttons.getPreferredSize());
-            } catch (InterruptedException interruptedException) {
-                interruptedException.printStackTrace();
-            }
         }
     }
 

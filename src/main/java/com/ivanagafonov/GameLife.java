@@ -8,18 +8,7 @@ public class GameLife {
     private final ExecutorService threadPool;
     private final List<List<Boolean>> cells;
     private PlayingPanel.PlayingField playingField;
-
-    public int getCountColumns() {
-        return countColumns;
-    }
-
-    public List<List<Boolean>> getCells() {
-        return cells;
-    }
-
-    public int getCountRows() {
-        return countRows;
-    }
+    private StatusEventManager statusEventManager;
 
     private final int countColumns;
     private final int countRows;
@@ -32,6 +21,7 @@ public class GameLife {
 
         initField();
 
+        statusEventManager = new StatusEventManager();
         threadPool = Executors.newFixedThreadPool(2);
 
         this.duration = duration;
@@ -66,6 +56,7 @@ public class GameLife {
         if (isEmptyField())
             randomFill();
         try {
+            statusEventManager.notify(new StatusEvent(this, Status.RUNNING));
             while (innerDuration > 0) {
                 isFieldChanged = iteration();
                 if (!isFieldChanged)
@@ -73,7 +64,10 @@ public class GameLife {
                 innerDuration--;
             }
         } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
+        }
+        finally {
+            statusEventManager.notify(new StatusEvent(this, Status.STOPPED));
         }
     }
 
@@ -110,7 +104,7 @@ public class GameLife {
         }
 
 
-        playingField.repaint();  // FIXME pattern Observer
+        playingField.repaint();
 
         return isFieldChanged;
     }
@@ -135,6 +129,22 @@ public class GameLife {
 
     public void setPlayingField(PlayingPanel.PlayingField playingField) {
         this.playingField = playingField;
+    }
+
+    public int getCountColumns() {
+        return countColumns;
+    }
+
+    public List<List<Boolean>> getCells() {
+        return cells;
+    }
+
+    public int getCountRows() {
+        return countRows;
+    }
+
+    public StatusEventManager getStatusEventManager() {
+        return statusEventManager;
     }
 
     abstract class ChangeCell implements Callable<Boolean> {
