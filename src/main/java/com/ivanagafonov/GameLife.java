@@ -104,7 +104,7 @@ public class GameLife {
         }
 
 
-        playingField.repaint();  // FIXME pattern Observer
+        playingField.repaint();
 
         return isFieldChanged;
     }

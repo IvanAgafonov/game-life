@@ -77,7 +77,7 @@ public class PlayingPanel extends JScrollPane {
             if (column > columns-1)
                 column = column-1;
 
-            game.getCells().get(row).set(column, !game.getCells().get(row).get(column)); // FIXME OBSERVER
+            game.getCells().get(row).set(column, !game.getCells().get(row).get(column));
             if (e.getSource() instanceof JComponent)
                 ((JComponent) e.getSource()).repaint();
         }
