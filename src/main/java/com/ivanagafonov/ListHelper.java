@@ -19,7 +19,7 @@ public abstract class ListHelper {
         return true;
     }
 
-    public static <T extends Cell> List<List<T>> deepCopy2D(List<List<T>> o1) {
+    public static <T> List<List<T>> deepCopy2D(List<List<T>> o1) {
         int rows = o1.size();
         int columns = o1.get(0).size();
 
@@ -28,7 +28,7 @@ public abstract class ListHelper {
         for (int i = 0; i < rows; i++) {
             o2.add(i, Collections.synchronizedList(new ArrayList<>(columns)));
             for (int j = 0; j < columns; j++) {
-                o2.get(i).add(j, (T) new Cell(o1.get(i).get(j).isCaptured()));
+                o2.get(i).add(j, o1.get(i).get(j));
             }
         }
 

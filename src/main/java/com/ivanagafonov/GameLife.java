@@ -5,15 +5,137 @@ import java.util.concurrent.*;
 
 public class GameLife {
 
-    private List<List<Cell>> cells;
-    private List<List<Cell>> last_cells;
+    private final ExecutorService threadPool;
+    private final List<List<Boolean>> cells;
     private PlayingPanel.PlayingField playingField;
+    private StatusEventManager statusEventManager;
+
+    private final int countColumns;
+    private final int countRows;
+    private final int duration;
+
+    GameLife(int countRows, int countColumns, int duration) {
+        this.countRows = countRows;
+        this.countColumns = countColumns;
+        cells = new ArrayList<>(countRows);
+
+        initField();
+
+        statusEventManager = new StatusEventManager();
+        threadPool = Executors.newFixedThreadPool(2);
+
+        this.duration = duration;
+    }
+
+    private boolean isEmptyField() {
+        boolean isEmpty = true;
+        for (List<Boolean> row : cells) {
+            for (boolean cell : row) {
+                if (cell) {
+                    isEmpty = false;
+                    break;
+                }
+            }
+        }
+
+        return isEmpty;
+    }
+
+    private void initField() {
+        for (int i = 0; i < countRows; i++) {
+            cells.add(i, new ArrayList<>(countColumns));
+            for (int j = 0; j < countColumns; j++) {
+                cells.get(i).add(j, false);
+            }
+        }
+    }
+
+    public void play () {
+        int innerDuration = duration;
+        boolean isFieldChanged;
+        if (isEmptyField())
+            randomFill();
+        try {
+            statusEventManager.notify(new StatusEvent(this, Status.RUNNING));
+            while (innerDuration > 0) {
+                isFieldChanged = iteration();
+                if (!isFieldChanged)
+                    break;
+                innerDuration--;
+            }
+        } catch (InterruptedException | ExecutionException e) {
+//            e.printStackTrace();
+        }
+        finally {
+            statusEventManager.notify(new StatusEvent(this, Status.STOPPED));
+        }
+    }
+
+    public boolean iteration () throws ExecutionException, InterruptedException {
+        ChangeCell callable;
+        List<CellChangeFutureTask> results = new ArrayList<>();
+
+        for (int i = 0; i < countRows; i++) {
+            for (int j = 0; j < countColumns; j++) {
+                if (cells.get(i).get(j)) {
+                    callable = new DeathCallable(i, j);
+                }
+                else {
+                    callable = new LifeCallable(i, j);
+                }
+                CellChangeFutureTask task = new CellChangeFutureTask(callable, i, j);
+                results.add(task);
+                threadPool.submit(task);
+            }
+        }
+
+        boolean isFieldChanged = false;
+
+        for (CellChangeFutureTask result: results) {
+            Boolean isCellChange = null;
+
+                isCellChange = result.get();
+
+            if (isCellChange) {
+                cells.get(result.getRow()).set(result.getColumn(),
+                        !cells.get(result.getRow()).get(result.getColumn()));
+                isFieldChanged = true;
+            }
+        }
+
+
+        playingField.repaint();
+
+        return isFieldChanged;
+    }
+
+    private void randomFill() {
+        for (int i = 0; i < countRows; i++) {
+            for (int j = 0; j < countColumns; j++) {
+                cells.get(i).set(j, ThreadLocalRandom.current().nextBoolean());
+            }
+        }
+    }
+
+    public void clear () {
+        for (int i = 0; i < countRows; i++) {
+            for (int j = 0; j < countColumns; j++) {
+                cells.get(i).set(j, false);
+            }
+        }
+
+        playingField.repaint(); // FIXME dependency on graphics
+    }
+
+    public void setPlayingField(PlayingPanel.PlayingField playingField) {
+        this.playingField = playingField;
+    }
 
     public int getCountColumns() {
         return countColumns;
     }
 
-    public List<List<Cell>> getCells() {
+    public List<List<Boolean>> getCells() {
         return cells;
     }
 
@@ -21,112 +143,13 @@ public class GameLife {
         return countRows;
     }
 
-    private int countColumns;
-    private int countRows;
-    private int duration;
-
-    <T extends List<? extends List<? extends Cell>> & Cloneable> GameLife(int countRows, int countColumns, int duration) {
-        this.countRows = countRows;
-        this.countColumns = countColumns;
-        cells = new ArrayList<>(countRows);
-
-        for (int i = 0; i < countRows; i++) {
-            cells.add(i, Collections.synchronizedList(new ArrayList<Cell>(countColumns)));
-            for (int j = 0; j < countColumns; j++) {
-                cells.get(i).add(j, new Cell());
-            }
-        }
-
-        last_cells = ListHelper.deepCopy2D(cells);
-        this.duration = duration;
+    public StatusEventManager getStatusEventManager() {
+        return statusEventManager;
     }
 
-    public void play () {
-        int innerDuration = duration;
-        try {
-            boolean isEmpty = true;
-            for (List<Cell> row : cells) {
-                for (Cell cell : row) {
-                    if (cell.isCaptured()) {
-                        isEmpty = false;
-                        break;
-                    }
-                }
-            }
-
-            if (isEmpty)
-                randomFill();
-
-            while (innerDuration > 0) {
-                iteration();
-                if (ListHelper.deepEquals2D(cells, last_cells))
-                    break;
-                last_cells = ListHelper.deepCopy2D(cells);
-                innerDuration--;
-                Thread.sleep(1);
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            //e.printStackTrace();
-            //TODO Handle
-        }
-
-    }
-
-    public void iteration () throws InterruptedException, ExecutionException {
-        ChangeCell callable;
-        List<Future<CellInfo>> results = new ArrayList<>();
-        for (int i = 0; i < countRows; i++) {
-            for (int j = 0; j < countColumns; j++) {
-                if (last_cells.get(i).get(j).isCaptured()) {
-                    callable = new DeathCallable(i, j);
-                }
-                else {
-                    callable = new LifeCallable(i, j);
-                }
-                FutureTask<CellInfo> task = new FutureTask<>(callable);
-                results.add(task);
-                Thread thread = new Thread(task);
-                thread.start();
-            }
-        }
-
-        for (Future<CellInfo> result: results) {
-                CellInfo cellInfo = result.get();
-        }
-        playingField.repaint();
-    }
-
-    private void randomFill() {
-        for (List<Cell> row : last_cells) {
-            for (Cell cell : row) {
-                cell.setCaptured(ThreadLocalRandom.current().nextBoolean());
-            }
-        }
-    }
-
-    public void clear () {
-        for (List<Cell> row : cells) {
-            for (Cell cell : row) {
-                cell.release();
-            }
-        }
-
-        for (List<Cell> row : last_cells) {
-            for (Cell cell : row) {
-                cell.release();
-            }
-        }
-
-        playingField.repaint();
-    }
-
-    public void setPlayingField(PlayingPanel.PlayingField playingField) {
-        this.playingField = playingField;
-    }
-
-    abstract class ChangeCell implements Callable<CellInfo> {
-        private int row;
-        private int column;
+    abstract class ChangeCell implements Callable<Boolean> {
+        private final int row;
+        private final int column;
 
         ChangeCell(int row, int column) {
             this.row = row;
@@ -141,32 +164,32 @@ public class GameLife {
             return column;
         }
 
-        private int getCountNeighbors() {
+        public int getCountNeighbors() {
             int countNeighbors = 0;
 
             if (getColumn() + 1 < countColumns &&
-                    last_cells.get(getRow()).get(getColumn() + 1).isCaptured())
+                    cells.get(getRow()).get(getColumn() + 1))
                 countNeighbors++;
             if (getRow() + 1 < countRows &&
-                    last_cells.get(getRow() + 1).get(getColumn()).isCaptured())
+                    cells.get(getRow() + 1).get(getColumn()))
                 countNeighbors++;
             if ( getRow() + 1 < countRows && getColumn() + 1 < countColumns &&
-                    last_cells.get(getRow() + 1).get(getColumn() + 1).isCaptured())
+                    cells.get(getRow() + 1).get(getColumn() + 1))
                 countNeighbors++;
             if (getRow() > 0 &&
-                    last_cells.get(getRow() - 1).get(getColumn()).isCaptured())
+                    cells.get(getRow() - 1).get(getColumn()))
                 countNeighbors++;
             if (getColumn() > 0 &&
-                    last_cells.get(getRow()).get(getColumn() - 1).isCaptured())
+                    cells.get(getRow()).get(getColumn() - 1))
                 countNeighbors++;
             if (getRow() > 0 && getColumn() > 0 &&
-                    last_cells.get(getRow() - 1).get(getColumn() - 1).isCaptured())
+                    cells.get(getRow() - 1).get(getColumn() - 1))
                 countNeighbors++;
             if (getRow() + 1 < countRows  && getColumn() > 0 &&
-                    last_cells.get(getRow() + 1).get(getColumn() - 1).isCaptured())
+                    cells.get(getRow() + 1).get(getColumn() - 1))
                 countNeighbors++;
             if (getRow() > 0  && getColumn() + 1 < countColumns &&
-                    last_cells.get(getRow() - 1).get(getColumn() + 1).isCaptured())
+                    cells.get(getRow() - 1).get(getColumn() + 1))
                 countNeighbors++;
 
             return countNeighbors;
@@ -182,13 +205,8 @@ public class GameLife {
         }
 
         @Override
-        public CellInfo call() throws Exception {
-            boolean isLife = super.getCountNeighbors() == NEIGHBORS_FOR_NEW_LIFE;
-
-            if (isLife)
-                cells.get(getRow()).get(getColumn()).capture();
-
-            return new CellInfo(getRow(), getColumn(), isLife);
+        public Boolean call() {
+            return super.getCountNeighbors() == NEIGHBORS_FOR_NEW_LIFE;
         }
     }
 
@@ -202,43 +220,12 @@ public class GameLife {
         }
 
         @Override
-        public CellInfo call() throws Exception {
+        public Boolean call() {
             int countNeighbors = super.getCountNeighbors();
 
-            boolean isDeath = countNeighbors < NEIGHBORS_FOR_ALONE_DEATH ||
+            return countNeighbors < NEIGHBORS_FOR_ALONE_DEATH ||
                     countNeighbors > NEIGHBORS_FOR_FULLNESS_DEATH;
-
-            if (isDeath)
-                cells.get(getRow()).get(getColumn()).release();
-
-            return new CellInfo(getRow(), getColumn(), isDeath);
         }
     }
 }
-
-class CellInfo {
-    private int row;
-    private int column;
-    private boolean isChange;
-
-    CellInfo(int row, int column, boolean isChange) {
-        this.row = row;
-        this.column = column;
-        this.isChange = isChange;
-    }
-
-    public int getRow() {
-        return row;
-    }
-
-    public int getColumn() {
-        return column;
-    }
-
-    public boolean isChange() {
-        return isChange;
-    }
-}
-
-
 

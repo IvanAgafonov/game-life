@@ -5,29 +5,26 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
-import java.util.concurrent.ConcurrentHashMap;
+
 
 public class PlayingPanel extends JScrollPane {
-    private PlayingField field;
-    private GameLife game;
+    private final GameLife game;
     private final int rows, columns;
-    private static final int MARGIN_WIDTH = 3;  // Magic number to not appear slider
 
     PlayingPanel(GameLife game) {
         this.rows = game.getCountRows();
         this.columns = game.getCountColumns();
         this.game = game;
 
-        setMaximumSize(new Dimension(columns * PlayingField.sideSize + MARGIN_WIDTH
-                , rows * PlayingField.sideSize));
-
-        field = new PlayingField();
+        PlayingField field = new PlayingField();
         field.setPreferredSize(new Dimension(columns * PlayingField.sideSize, rows * PlayingField.sideSize));
         field.setBorder(BorderFactory.createLineBorder(Color.black));
 
         game.setPlayingField(field);
 
         setViewportView(field);
+
+        setMaximumSize(getPreferredSize());
     }
 
     class PlayingField extends JPanel {
@@ -47,7 +44,7 @@ public class PlayingPanel extends JScrollPane {
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++) {
                     Rectangle2D rect = new Rectangle2D.Float(x, y, sideSize, sideSize);
-                    if (game.getCells().get(i).get(j).isCaptured())
+                    if (game.getCells().get(i).get(j))
                     {
                         g2.setPaint(Color.GREEN);
                         g2.fill(rect);
@@ -80,7 +77,7 @@ public class PlayingPanel extends JScrollPane {
             if (column > columns-1)
                 column = column-1;
 
-            game.getCells().get(row).get(column).changeCaptured();
+            game.getCells().get(row).set(column, !game.getCells().get(row).get(column));
             if (e.getSource() instanceof JComponent)
                 ((JComponent) e.getSource()).repaint();
         }
