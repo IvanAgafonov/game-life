@@ -66,6 +66,10 @@ public class GameLife {
             }
         }
 
+        for (CellChangeFutureTask result: results) {
+            result.get();
+        }
+
         boolean isFieldChanged = false;
 
         for (CellChangeFutureTask result: results) {
