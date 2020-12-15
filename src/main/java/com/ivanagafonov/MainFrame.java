@@ -14,6 +14,7 @@ public class MainFrame extends JFrame implements StatusEventListener {
     private JPanel buttons = new JPanel();
     private PlayingPanel playingPanel;
     private ExecutorService controlThread;
+    private GameLife gameLife;
 
 
     MainFrame() {
@@ -33,7 +34,10 @@ public class MainFrame extends JFrame implements StatusEventListener {
         buttons.setMaximumSize(buttons.getPreferredSize());
 
         this.getContentPane().add(buttons);
-        this.addWindowStateListener(new WindowMinSizeHandler());
+    }
+
+    public void setMinSizePreferred() {
+        setMinimumSize(getPreferredSize());
     }
 
     public void addPlayingPanel(PlayingPanel panel) {
@@ -67,9 +71,14 @@ public class MainFrame extends JFrame implements StatusEventListener {
 
         EventQueue.invokeLater( () -> {
             MainFrame mainFrame = new MainFrame();
-            GameLife game = new GameLife(countRowsField, countColumnsFiled, countIterationFiled);
-            mainFrame.addPlayingPanel(new PlayingPanel(game));
+            Field field = new Field(countRowsField, countColumnsFiled);
+            GameLife game = new GameLife(field, countIterationFiled);
+            mainFrame.setGameLife(game);
+            PlayingPanel playingPanel = new PlayingPanel(field);
+            mainFrame.addPlayingPanel(playingPanel);
             game.getStatusEventManager().subscribe(mainFrame);
+            game.getGraphicEventManager().subscribe(playingPanel);
+//            mainFrame.setMinSizePreferred();
         });
 
     }
@@ -90,14 +99,17 @@ public class MainFrame extends JFrame implements StatusEventListener {
         }
     }
 
+    public void setGameLife(GameLife gameLife) {
+        this.gameLife = gameLife;
+    }
+
 
     class StartHandler implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
             controlThread = Executors.newSingleThreadExecutor();
-            controlThread.submit(() -> playingPanel.getGame().play());
-            controlThread.shutdown();
+            controlThread.submit(() -> gameLife.play());
         }
     }
 
@@ -115,7 +127,7 @@ public class MainFrame extends JFrame implements StatusEventListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            playingPanel.getGame().clear();
+            gameLife.clear();
         }
     }
 }
