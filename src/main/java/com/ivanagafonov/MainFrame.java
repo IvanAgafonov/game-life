@@ -37,7 +37,14 @@ public class MainFrame extends JFrame implements StatusEventListener {
     }
 
     public void setMinSizePreferred() {
-        setMinimumSize(getPreferredSize());
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        int screenWidth = gd.getDisplayMode().getWidth()/2;
+        int screenHeight = gd.getDisplayMode().getHeight()/2;
+
+        int mainFrameMinHeight = Math.min(getPreferredSize().height, screenHeight);
+        int mainFrameMinWidth = Math.min(getPreferredSize().width, screenWidth);
+
+        setMinimumSize(new Dimension(mainFrameMinWidth, mainFrameMinHeight));
     }
 
     public void addPlayingPanel(PlayingPanel panel) {
@@ -78,7 +85,7 @@ public class MainFrame extends JFrame implements StatusEventListener {
             mainFrame.addPlayingPanel(playingPanel);
             game.getStatusEventManager().subscribe(mainFrame);
             game.getGraphicEventManager().subscribe(playingPanel);
-//            mainFrame.setMinSizePreferred();
+            mainFrame.setMinSizePreferred();
         });
 
     }
