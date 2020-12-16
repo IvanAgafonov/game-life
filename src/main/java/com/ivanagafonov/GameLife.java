@@ -94,18 +94,6 @@ public class GameLife {
         graphicEventManager.notify(new EventObject(this));
     }
 
-    public void setPlayingField(PlayingPanel.PlayingField playingField) {
-        this.playingField = playingField;
-    }
-
-    public int getCountColumns() {
-        return countColumns;
-    }
-
-    public int getCountRows() {
-        return countRows;
-    }
-
     public StatusEventManager getStatusEventManager() {
         return statusEventManager;
     }
