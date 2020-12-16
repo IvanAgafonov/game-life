@@ -7,24 +7,29 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 
 
-public class PlayingPanel extends JScrollPane {
-    private final GameLife game;
+public class PlayingPanel extends JScrollPane implements GraphicEventListener{
+    private final Field field;
     private final int rows, columns;
+    private PlayingField innerFieldPanel;
 
-    PlayingPanel(GameLife game) {
-        this.rows = game.getCountRows();
-        this.columns = game.getCountColumns();
-        this.game = game;
+    PlayingPanel(Field field) {
+        this.rows = field.getRows();
+        this.columns = field.getColumns();
+        this.field = field;
 
-        PlayingField field = new PlayingField();
-        field.setPreferredSize(new Dimension(columns * PlayingField.sideSize, rows * PlayingField.sideSize));
-        field.setBorder(BorderFactory.createLineBorder(Color.black));
+        innerFieldPanel = new PlayingField();
+        innerFieldPanel.setPreferredSize(new Dimension(columns * PlayingField.sideSize,
+                rows * PlayingField.sideSize));
+        innerFieldPanel.setBorder(BorderFactory.createLineBorder(Color.black));
 
-        game.setPlayingField(field);
-
-        setViewportView(field);
+        setViewportView(innerFieldPanel);
 
         setMaximumSize(getPreferredSize());
+    }
+
+    @Override
+    public void updateGraphic() {
+        innerFieldPanel.repaint();
     }
 
     class PlayingField extends JPanel {
@@ -44,7 +49,7 @@ public class PlayingPanel extends JScrollPane {
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++) {
                     Rectangle2D rect = new Rectangle2D.Float(x, y, sideSize, sideSize);
-                    if (game.getCells().get(i).get(j))
+                    if (field.getCell(i, j))
                     {
                         g2.setPaint(Color.GREEN);
                         g2.fill(rect);
@@ -60,10 +65,6 @@ public class PlayingPanel extends JScrollPane {
         }
     }
 
-    public GameLife getGame() {
-        return game;
-    }
-
     class MouseHandler extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -77,7 +78,7 @@ public class PlayingPanel extends JScrollPane {
             if (column > columns-1)
                 column = column-1;
 
-            game.getCells().get(row).set(column, !game.getCells().get(row).get(column));
+            field.changeCell(row, column);
             if (e.getSource() instanceof JComponent)
                 ((JComponent) e.getSource()).repaint();
         }

@@ -1,6 +1,7 @@
 package com.ivanagafonov;
 
 import java.util.ArrayList;
+import java.util.EventListener;
 import java.util.EventObject;
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class StatusEventManager {
 
 enum Status {RUNNING, STOPPED}
 
-interface StatusEventListener {
+interface StatusEventListener extends EventListener {
     void update(Status status);
 }
 
