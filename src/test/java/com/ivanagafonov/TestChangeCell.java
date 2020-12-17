@@ -14,23 +14,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 public class TestChangeCell {
-    private int rows = 5;
-    private int columns = 5;
+    private static int rows = 5;
+    private static int columns = 5;
     private Field field;
     private GameLife gameLife;
 
     private static Stream<Arguments> provideEdgeCells() {
         return Stream.of(
                 Arguments.of(0, 0),
-                Arguments.of(0, 4),
-                Arguments.of(4, 0),
-                Arguments.of(4, 4)
+                Arguments.of(0, columns-1),
+                Arguments.of(rows-1, 0),
+                Arguments.of(rows-1, columns-1)
         );
     }
 
     @BeforeEach
     public void initGame() {
-        field = new Field(5, 5);
+        field = new Field(rows, columns);
         gameLife = new GameLife(field, 5);
 
         for(int i = 0; i < rows; i++) {
@@ -40,7 +40,7 @@ public class TestChangeCell {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "[{index}] row: {0}, column: {1}")
     @MethodSource("provideEdgeCells")
     public void testGetCountNeighborsTest_atTheEdges(int row, int column) {
         GameLife.ChangeCell callable = gameLife.new DeathCallable(row, column);

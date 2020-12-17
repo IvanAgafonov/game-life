@@ -41,6 +41,14 @@ public class TestField {
     }
 
     @Test
+    public void testFiled_ifRandomFieldAfterEmptyField() {
+        field.clear();
+        field.randomFill();
+
+        assertFalse(field.isEmptyField());
+    }
+
+    @Test
     public void testIsEmptyField_ifNoOneFilled() {
         field.clear();
 
