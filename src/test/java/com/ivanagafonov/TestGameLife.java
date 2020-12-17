@@ -53,4 +53,12 @@ public class TestGameLife {
         assertFalse(field.isEmptyField());
     }
 
+    @Test
+    public void testClearFieldAfterClearGame() {
+        Field spyField = Mockito.spy(field);
+        gameLife = new GameLife(spyField, 0);
+        gameLife.clear();
+
+        Mockito.verify(spyField, Mockito.times(1)).clear();
+    }
 }
