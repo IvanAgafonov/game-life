@@ -59,6 +59,8 @@ hs_err_pid*
  .idea/modules
  *.iml
  *.ipr
+game-life.iml
+
 
 # CMake
 cmake-build-*/

@@ -117,6 +117,7 @@ public class MainFrame extends JFrame implements StatusEventListener {
         public void actionPerformed(ActionEvent e) {
             controlThread = Executors.newSingleThreadExecutor();
             controlThread.submit(() -> gameLife.play());
+			controlThread.shutdown();  // Needs to free memory, because it will new ThreadExecutor create
         }
     }
 
